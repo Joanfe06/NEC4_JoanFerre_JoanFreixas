@@ -39,7 +39,7 @@ class TSP:
             total_distance = sum(distances)
             self.fitness[idx] = 1 / total_distance
 
-    def select_parents(self):
+    def roulette_wheel(self):
         parents = random.choices(self.population, weights=self.fitness, k=2)
         # print
         if self.verbose:
@@ -47,7 +47,14 @@ class TSP:
             print(parents)
         return parents
     
-    def crossover(self, p1, p2):
+    def rank_selection(self):
+        # sort population by fitness
+        population_sorted = [x for _, x in sorted(zip(self.fitness, self.population), key=lambda pair: pair[0])]
+        # select parents, the higher the fitness, the higher the probability of being selected
+        parents = random.choices(population_sorted, weights=list(range(1, len(population_sorted)+1)), k=2)
+        return parents
+    
+    def ordered_crossover(self, p1, p2):
         # Choose subset of cities
         subset_size = int(self.crossover_rate * len(p1))
         subset = set(random.sample(p1, subset_size))
@@ -68,7 +75,7 @@ class TSP:
 
         return child1, child2
     
-    def pmx(self, father, mother):
+    def partially_mapped_crossover(self, father, mother):
         genes1 = father.copy()  # Initialize genes of child1 with father's genes
         genes2 = mother.copy()  # Initialize genes of child2 with mother's genes
 
@@ -120,9 +127,9 @@ class TSP:
             new_population = []
             for _ in range(self.num_chromosomes//2):
                 # select parents
-                p1, p2 = self.select_parents()
+                p1, p2 = self.rank_selection()
                 # crossover
-                c1, c2 = self.pmx(p1, p2)
+                c1, c2 = self.partially_mapped_crossover(p1, p2)
                 # mutation
                 c1 = self.mutation(c1)
                 c2 = self.mutation(c2)
@@ -142,6 +149,9 @@ class TSP:
         print(max(max(self.fitness), self.elite[1]))
         print("Elite: ")
         print(self.elite)
+        # check if elite has repeated cities
+        print("Elite has repeated cities: ")
+        print(len(set(self.elite[0])) != len(self.elite[0]))
 
 
 
