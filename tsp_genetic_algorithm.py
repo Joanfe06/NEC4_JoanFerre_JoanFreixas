@@ -54,6 +54,13 @@ class TSP:
         parents = random.choices(population_sorted, weights=list(range(1, len(population_sorted)+1)), k=2)
         return parents
     
+    def tournament_selection(self):
+        # select N/5 random chromosomes
+        tournament = random.sample(self.population, self.num_chromosomes//5)
+        # select the best 2
+        parents = sorted(tournament, key=lambda x: self.fitness[self.population.index(x)], reverse=True)[:2]
+        return parents
+    
     def ordered_crossover(self, p1, p2):
         # Choose subset of cities
         subset_size = int(self.crossover_rate * len(p1))
@@ -127,7 +134,7 @@ class TSP:
             new_population = []
             for _ in range(self.num_chromosomes//2):
                 # select parents
-                p1, p2 = self.rank_selection()
+                p1, p2 = self.tournament_selection()
                 # crossover
                 c1, c2 = self.partially_mapped_crossover(p1, p2)
                 # mutation
