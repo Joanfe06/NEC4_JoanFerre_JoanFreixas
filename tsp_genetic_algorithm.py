@@ -7,7 +7,7 @@ import random
 import math
 
 class TSP:
-    def __init__(self, cities, num_chromosomes, num_generations, mutation_rate, crossover_rate, verbose=False):
+    def __init__(self, cities, num_chromosomes, num_generations, mutation_rate, crossover_rate, parent_selection, crossover, mutation, verbose=False):
         self.cities = cities
         self.num_chromosomes = num_chromosomes
         self.num_generations = num_generations
@@ -18,6 +18,29 @@ class TSP:
         # fitness is an array of num_chromosomes elements
         self.fitness = [0]*num_chromosomes
         self.elite = None
+        # parent selection
+        if parent_selection == "roulette_wheel":
+            self.parent_selection = self.roulette_wheel
+        elif parent_selection == "rank_selection":
+            self.parent_selection = self.rank_selection
+        elif parent_selection == "tournament_selection":
+            self.parent_selection = self.tournament_selection
+        else:
+            raise Exception("Invalid parent selection method")
+        # crossover
+        if crossover == "ordered_crossover":
+            self.crossover = self.ordered_crossover
+        elif crossover == "partially_mapped_crossover":
+            self.crossover = self.partially_mapped_crossover
+        else:
+            raise Exception("Invalid crossover method")
+        # mutation
+        if mutation == "always_mutate":
+            self.mutation = self.always_mutate
+        elif mutation == "swap_mutate":
+            self.mutation = self.swap_mutate
+        else:
+            raise Exception("Invalid mutation method")
 
     def create_population(self):
         for _ in range(self.num_chromosomes):            
@@ -113,14 +136,23 @@ class TSP:
         child2 = genes2
         return child1, child2
     
-    def mutation(self, chromosome):
-        if random.random() < self.mutation_rate:
-            # chose a random city and put it before another city
+    def always_mutate(self, chromosome):
+        # chose a random city and put it before another city
+        c1, c2 = random.sample(range(len(chromosome)), 2)
+        chromosome.insert(c1, chromosome.pop(c2))
+        if self.verbose:
+            print("Mutation: ")
+            print(chromosome)
+        return chromosome
+    
+    def swap_mutate(self, chromosome):
+        # while random number is lower than mutation rate, swap two random cities
+        while random.random() < self.mutation_rate:
             c1, c2 = random.sample(range(len(chromosome)), 2)
-            chromosome.insert(c1, chromosome.pop(c2))
-            if self.verbose:
-                print("Mutation: ")
-                print(chromosome)
+            chromosome[c1], chromosome[c2] = chromosome[c2], chromosome[c1]
+        if self.verbose:
+            print("Mutation: ")
+            print(chromosome)
         return chromosome
     
     def run(self):
@@ -134,9 +166,9 @@ class TSP:
             new_population = []
             for _ in range(self.num_chromosomes//2):
                 # select parents
-                p1, p2 = self.tournament_selection()
+                p1, p2 = self.parent_selection()
                 # crossover
-                c1, c2 = self.partially_mapped_crossover(p1, p2)
+                c1, c2 = self.crossover(p1, p2)
                 # mutation
                 c1 = self.mutation(c1)
                 c2 = self.mutation(c2)
