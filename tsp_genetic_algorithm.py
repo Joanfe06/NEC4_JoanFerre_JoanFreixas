@@ -14,6 +14,7 @@ class TSP:
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.population = []
+        self.evolution_data = []
         self.verbose = verbose
         # fitness is an array of num_chromosomes elements
         self.fitness = [0]*num_chromosomes
@@ -184,8 +185,15 @@ class TSP:
                 self.elite = (self.population[self.fitness.index(max(self.fitness))], max(self.fitness))
             print("Fitness generation number " + str(i) + ": ")
             print(max(max(self.fitness), self.elite[1]))
+
+            # Calculate and store the minimum total traveling distance
+            min_distance = 1 / (max(max(self.fitness), self.elite[1]))
+            self.evolution_data.append(min_distance)
+
         print("Final fitness: ")
         print(max(max(self.fitness), self.elite[1]))
+        print("Final Minimum total traveling distance: ")
+        print(1/(max(max(self.fitness), self.elite[1])))
         print("Elite: ")
         print(self.elite)
         # check if elite has repeated cities
